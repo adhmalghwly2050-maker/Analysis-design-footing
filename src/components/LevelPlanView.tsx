@@ -784,6 +784,72 @@ export default function LevelPlanView({
           );
         })}
 
+        {/* Nodes (joints) — rendered at all beam endpoints + column centres */}
+        {visibleTypes?.nodes !== false && (() => {
+          const nodePositions = new Map<string, { x: number; y: number; idx: number }>();
+          let idx = 1;
+          // collect column centres
+          for (const [, cols] of uniqueColPositions.entries()) {
+            const c = cols[0];
+            const k = `${c.x.toFixed(3)}_${c.y.toFixed(3)}`;
+            if (!nodePositions.has(k)) nodePositions.set(k, { x: c.x, y: c.y, idx: idx++ });
+          }
+          // collect beam endpoints
+          for (const b of beamsAtLevel) {
+            const k1 = `${b.x1.toFixed(3)}_${b.y1.toFixed(3)}`;
+            const k2 = `${b.x2.toFixed(3)}_${b.y2.toFixed(3)}`;
+            if (!nodePositions.has(k1)) nodePositions.set(k1, { x: b.x1, y: b.y1, idx: idx++ });
+            if (!nodePositions.has(k2)) nodePositions.set(k2, { x: b.x2, y: b.y2, idx: idx++ });
+          }
+
+          return Array.from(nodePositions.values()).map(({ x, y, idx: ni }) => {
+            const ny = -y;
+            const nodeLabel = `N${ni}`;
+            // at ground level: clicking opens the support dialog for that column (if one exists at this position)
+            const colAtPos = colsAtLevel.find(c => Math.abs(c.x - x) < 0.01 && Math.abs(c.y - y) < 0.01);
+            const handleNodeClick = () => {
+              if (isGroundLevel && colAtPos) {
+                const sKey = `${colAtPos.x.toFixed(2)}_${colAtPos.y.toFixed(2)}_${colAtPos.zBottom ?? 0}`;
+                const cur = supportRestraints?.[sKey]
+                  || (colAtPos.bottomEndCondition === 'F'
+                    ? { ux: true, uy: true, uz: true, rx: true, ry: true, rz: true }
+                    : { ux: true, uy: true, uz: true, rx: false, ry: false, rz: false });
+                setSupportDialog({
+                  open: true, colId: colAtPos.id, colLabel: colAtPos.id,
+                  x: colAtPos.x, y: colAtPos.y,
+                  restraints: { ...cur }, applyToAll: false,
+                });
+              }
+            };
+            return (
+              <g key={nodeLabel} onClick={handleNodeClick} style={{ cursor: isGroundLevel && colAtPos ? 'pointer' : 'default' }}>
+                {/* Outer glow ring */}
+                <circle cx={x} cy={ny} r={0.14}
+                  fill="hsl(217 91% 60% / 0.18)"
+                  stroke="hsl(217 91% 60% / 0.4)"
+                  strokeWidth={0.02} />
+                {/* Node dot */}
+                <circle cx={x} cy={ny} r={0.09}
+                  fill="hsl(217 91% 60%)"
+                  stroke="hsl(var(--background))"
+                  strokeWidth={0.03} />
+                {/* Node label */}
+                <text x={x + 0.18} y={ny - 0.12}
+                  textAnchor="start" dominantBaseline="middle"
+                  fill="hsl(217 91% 55%)"
+                  fontSize={0.18} fontFamily="monospace" fontWeight="bold">
+                  {nodeLabel}
+                </text>
+                {/* Ground-level support indicator hint */}
+                {isGroundLevel && colAtPos && (
+                  <circle cx={x} cy={ny} r={0.05}
+                    fill="hsl(var(--background))" />
+                )}
+              </g>
+            );
+          });
+        })()}
+
         {/* Grid axis labels */}
         {Array.from({ length: Math.ceil(viewBox.w / gridStep) + 2 }, (_, i) => {
           const x = Math.floor(viewBox.x / gridStep) * gridStep + i * gridStep;
