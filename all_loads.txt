@@ -1,4 +1,0 @@
-ELEMENT_ID,LOAD_CASE,DIRECTION,MAGNITUDE,UNIT
-beam_B1,DEAD,local_z,-24.50,kN/m
-beam_B1,LIVE,local_z,-10.00,kN/m
-col_C1,DEAD,local_x,-3.00,kN/m (selfweight)
