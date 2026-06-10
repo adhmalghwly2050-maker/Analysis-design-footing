@@ -1,0 +1,6 @@
+{
+  "name": "Slab and Footing Designer",
+  "description": "An advanced engineering tool for structural analysis and design of ribbed slabs, concrete structures, beam-slab systems, and concrete strip footings based on ACI code standards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
